@@ -39,6 +39,13 @@ while True:
 
         print("API RESPONSE")
         print(response.json())
+        result = response.json()
+
+        if result["risk_level"] == "HIGH":
+            print("🚨 FRAUD DETECTED!")
+            print("🛑 TRANSACTION BLOCKED!")
+        else:
+            print("✅ TRANSACTION ALLOWED")
 
     except Exception as e:
         print("Could not connect to API:", e)
