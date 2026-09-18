@@ -1,4 +1,7 @@
 import streamlit as st
+import pandas as pd
+import requests
+import time
 
 st.set_page_config(
     page_title="FraudShield AI",
@@ -7,66 +10,57 @@ st.set_page_config(
 )
 
 st.title("🛡️ FraudShield AI")
-st.subheader("Explainable Financial Fraud Detection")
+st.subheader("Real-Time Fraud Detection Dashboard")
 
-st.write(
-    "Analyze a transaction and identify potentially suspicious activity."
-)
+API_URL = "http://127.0.0.1:8000/transaction"
 
-st.divider()
+st.write("Click the button below to generate and analyze a transaction.")
 
-st.header("Transaction Details")
+if st.button("🚀 Analyze New Transaction"):
 
-col1, col2 = st.columns(2)
+    import random
 
-with col1:
-    transaction_id = st.text_input(
-        "Transaction ID",
-        value="TXN-1001"
-    )
+    transaction = {
+        "transaction_id": f"WEB{random.randint(1000, 9999)}",
+        "amount": random.randint(500, 100000),
+        "location": random.choice([
+            "Chennai",
+            "Coimbatore",
+            "Madurai",
+            "Mumbai",
+            "Delhi",
+            "Bangalore"
+        ]),
+        "device_new": random.choice([0, 0, 0, 1]),
+        "hour": random.randint(0, 23),
+        "velocity": random.randint(1, 12),
+        "account_age_days": random.randint(10, 2000)
+    }
 
-    amount = st.number_input(
-        "Transaction Amount (₹)",
-        min_value=0.0,
-        value=5000.0,
-        step=500.0
-    )
+    try:
+        response = requests.post(
+            API_URL,
+            json=transaction,
+            timeout=5
+        )
 
-    location = st.text_input(
-        "Location",
-        value="Chennai"
-    )
+        result = response.json()
 
-with col2:
-    device_id = st.text_input(
-        "Device ID",
-        value="DEVICE-001"
-    )
+        st.write("### Transaction")
+        st.json(transaction)
 
-    merchant_id = st.text_input(
-        "Merchant ID",
-        value="MERCHANT-001"
-    )
+        st.write("### Fraud Analysis")
 
-    transaction_time = st.time_input(
-        "Transaction Time"
-    )
+        col1, col2, col3 = st.columns(3)
 
-st.divider()
+        col1.metric("Risk Score", result["risk_score"])
+        col2.metric("Risk Level", result["risk_level"])
+        col3.metric("Action", result["recommended_action"])
 
-if st.button("🔍 Analyze Transaction", type="primary"):
+        st.write("### 🚨 Reasons")
 
-    st.success("Transaction received successfully!")
+        for reason in result["reasons"]:
+            st.write("•", reason)
 
-    st.subheader("Transaction Summary")
-
-    st.write(f"**Transaction ID:** {transaction_id}")
-    st.write(f"**Amount:** ₹{amount:,.2f}")
-    st.write(f"**Location:** {location}")
-    st.write(f"**Device:** {device_id}")
-    st.write(f"**Merchant:** {merchant_id}")
-    st.write(f"**Time:** {transaction_time}")
-
-    st.info(
-        "The fraud detection model will be connected here."
-    )
+    except Exception as e:
+        st.error(f"Could not connect to API: {e}")
